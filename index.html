@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Mixtape Creator</title>
+    <!-- Load YouTube API first -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* Creator Interface */
+        .mixtape-creator {
+            background-color: #e8e0d5;
+            border-radius: 10px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .creator-title {
+            color: #8b2131;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .cassette {
+            background-color: #222;
+            border-radius: 5px;
+            width: 180px;
+            height: 110px;
+            margin: 0 auto 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        
+        .cassette-title {
+            background-color: white;
+            border: 1px solid black;
+            padding: 5px 10px;
+            width: 80%;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .cassette-wheels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .wheel {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #444, #111);
+            position: relative;
+        }
+        
+        .wheel::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background-color: #555;
+            border-radius: 50%;
+        }
+        
+        .cassette-mid {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 5px 0;
+            height: 20px;
+        }
+        
+        .mid-section {
+            width: 60px;
+            height: 20px;
+            background-color: #4287f5;
+            border: 1px solid black;
+        }
+        
+        .mid-section.red {
+            background-color: #e74c3c;
+        }
+        
+        .mid-section.green {
+            background-color: #2ecc71;
+        }
+        
+        /* Form Fields */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f5f0;
+            font-size: 14px;
+        }
+        
+        .track-input {
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .track-count {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .add-track-btn {
+            background-color: #b8a99a;
+            color: #333;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .add-track-btn:hover {
+            background-color: #a89888;
+        }
+        
+        .create-btn {
+            background-color: #8b2131;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .create-btn:hover {
+            background-color: #7a1c2b;
+        }
+        
+        /* Player Interface */
+        .mixtape-player {
+            display: none;
+            background-color: #e8e0d5;
+            border-radius: 10px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .player-top {
+            position: relative;
+            height: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .player-antenna {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 6px;
+            background-color: #8b2131;
+            border-radius: 3px;
+        }
+        
+        .antenna-support {
+            position: absolute;
+            top: -5px;
+            left: 15%;
+            width: 10px;
+            height: 10px;
+            background-color: #d5c6b6;
+            border-radius: 2px;
+        }
+        
+        .antenna-support:last-child {
+            left: 85%;
+        }
+        
+        .player-deck {
+            background-color: #d5c6b6;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        
+        .track-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #d5c6b6;
+            border: 2px solid #a89888;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .control-btn:hover {
+            background-color: #c9bbaa;
+        }
+        
+        .control-btn i {
+            font-size: 18px;
+            color: #555;
+        }
+        
+        .player-footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .create-new-link {
+            display: block;
+            margin-top: 15px;
+            color: #8b2131;
+            text-decoration: none;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .create-new-link:hover {
+            text-decoration: underline;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .video-container {
+            margin-top: 15px;
+        }
+        
+        /* Remove Track Button */
+        .remove-track {
+            background: none;
+            border: none;
+            color: #8b2131;
+            cursor: pointer;
+            font-size: 16px;
+            position: absolute;
+            right: -25px;
+            top: 10px;
+        }
+        
+        .remove-track:hover {
+            color: #7a1c2b;
+        }
+        
+        /* Spinner animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinning {
+            animation: spin 2s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mixtape Creator Interface -->
+    <div class="mixtape-creator" id="creator">
+        <h1 class="creator-title">Make a Mixtape</h1>
+        
+        <div class="cassette">
+            <div class="cassette-title" id="cassette-title-display">FOR YOU</div>
+            <div class="cassette-wheels">
+                <div class="wheel"></div>
+                <div class="mid-section red"></div>
+                <div class="wheel"></div>
+            </div>
+            <div class="cassette-mid">
+                <div class="mid-section green"></div>
+                <div class="mid-section blue"></div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="recipient">RECIPIENT NAME (OPTIONAL):</label>
+            <input type="text" id="recipient" class="form-control" placeholder="Who is this mixtape for?">
+        </div>
+        
+        <div class="form-group">
+            <label>ADD YOUTUBE LINKS (MAX 5):</label>
+            <div id="track-inputs">
+                <div class="track-input">
+                    <input type="text" class="form-control track-url" placeholder="Paste YouTube URL here">
+                    <span class="track-count">1/5</span>
+                </div>
+            </div>
+        </div>
+        
+        <button id="add-track" class="add-track-btn">ADD ANOTHER TRACK (1/5)</button>
+        <button id="create-mixtape" class="create-btn">CREATE MIXTAPE</button>
+    </div>
+    
+    <!-- Mixtape Player Interface -->
+    <div class="mixtape-player" id="player">
+        <div class="player-top">
+            <div class="player-antenna"></div>
+            <div class="antenna-support"></div>
+            <div class="antenna-support"></div>
+        </div>
+        
+        <div class="player-deck">
+            <div class="cassette">
+                <div class="cassette-title" id="player-title">JORDAN'S MIX</div>
+                <div class="cassette-wheels">
+                    <div class="wheel" id="left-wheel"></div>
+                    <div class="mid-section red"></div>
+                    <div class="wheel" id="right-wheel"></div>
+                </div>
+                <div class="cassette-mid">
+                    <div class="mid-section green"></div>
+                    <div class="mid-section blue"></div>
+                </div>
+            </div>
+            
+            <div class="track-info">
+                <span id="track-counter">TRACK 1/1</span>
+                <span id="track-status">READY</span>
+            </div>
+            
+            <div class="controls">
+                <div class="control-btn" id="prev-btn">
+                    <i>⏮</i>
+                </div>
+                <div class="control-btn" id="play-btn">
+                    <i id="play-icon">▶</i>
+                </div>
+                <div class="control-btn" id="next-btn">
+                    <i>⏭</i>
+                </div>
+            </div>
+            
+            <div id="video-container" class="video-container"></div>
+        </div>
+        
+        <div class="player-footer">
+            <p>Note on private playlists: You'll need to press pause and play when skipping tracks</p>
+            <a href="#" class="create-new-link" id="create-new">Create a new mixtape</a>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const creator = document.getElementById('creator');
+        const player = document.getElementById('player');
+        const recipientInput = document.getElementById('recipient');
+        const cassetteTitleDisplay = document.getElementById('cassette-title-display');
+        const playerTitle = document.getElementById('player-title');
+        const trackInputsContainer = document.getElementById('track-inputs');
+        const addTrackBtn = document.getElementById('add-track');
+        const createMixtapeBtn = document.getElementById('create-mixtape');
+        const trackCounter = document.getElementById('track-counter');
+        const trackStatus = document.getElementById('track-status');
+        const prevBtn = document.getElementById('prev-btn');
+        const playBtn = document.getElementById('play-btn');
+        const playIcon = document.getElementById('play-icon');
+        const nextBtn = document.getElementById('next-btn');
+        const videoContainer = document.getElementById('video-container');
+        const createNewBtn = document.getElementById('create-new');
+        const leftWheel = document.getElementById('left-wheel');
+        const rightWheel = document.getElementById('right-wheel');
+        
+        // Variables
+        let trackUrls = [];
+        let currentTrackIndex = 0;
+        let ytPlayer;
+        let isPlaying = false;
+        let isYouTubeAPIReady = false;
+        
+        // Define YouTube API callback
+        window.onYouTubeIframeAPIReady = function() {
+            isYouTubeAPIReady = true;
+            console.log("YouTube API Ready");
+        };
+        
+        // Event Listeners
+        recipientInput.addEventListener('input', updateCassetteTitle);
+        addTrackBtn.addEventListener('click', addTrackInput);
+        createMixtapeBtn.addEventListener('click', createMixtape);
+        prevBtn.addEventListener('click', playPreviousTrack);
+        playBtn.addEventListener('click', togglePlay);
+        nextBtn.addEventListener('click', playNextTrack);
+        createNewBtn.addEventListener('click', resetToCreator);
+        
+        // Functions
+        function updateCassetteTitle() {
+            const recipientName = recipientInput.value.trim();
+            cassetteTitleDisplay.textContent = recipientName ? recipientName.toUpperCase() + "'S MIX" : "FOR YOU";
+        }
+        
+        function addTrackInput() {
+            const trackInputs = document.querySelectorAll('.track-input');
+            
+            if (trackInputs.length < 5) {
+                const newTrackInput = document.createElement('div');
+                newTrackInput.className = 'track-input';
+                newTrackInput.innerHTML = `
+                    <input type="text" class="form-control track-url" placeholder="Paste YouTube URL here">
+                    <span class="track-count">${trackInputs.length + 1}/5</span>
+                    <button class="remove-track">×</button>
+                `;
+                
+                trackInputsContainer.appendChild(newTrackInput);
+                
+                // Add event listener to remove button
+                const removeBtn = newTrackInput.querySelector('.remove-track');
+                removeBtn.addEventListener('click', () => {
+                    newTrackInput.remove();
+                    updateTrackCounts();
+                    updateAddTrackButton();
+                });
+                
+                // Add remove buttons to existing tracks if they don't have them
+                trackInputs.forEach(input => {
+                    if (!input.querySelector('.remove-track')) {
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'remove-track';
+                        removeBtn.textContent = '×';
+                        removeBtn.addEventListener('click', () => {
+                            input.remove();
+                            updateTrackCounts();
+                            updateAddTrackButton();
+                        });
+                        input.appendChild(removeBtn);
+                    }
+                });
+                
+                updateAddTrackButton();
+            }
+        }
+        
+        function updateTrackCounts() {
+            const trackInputs = document.querySelectorAll('.track-input');
+            trackInputs.forEach((input, index) => {
+                const trackCount = input.querySelector('.track-count');
+                trackCount.textContent = `${index + 1}/5`;
+            });
+        }
+        
+        function updateAddTrackButton() {
+            const trackInputs = document.querySelectorAll('.track-input');
+            addTrackBtn.textContent = `ADD ANOTHER TRACK (${trackInputs.length}/5)`;
+            
+            if (trackInputs.length >= 5) {
+                addTrackBtn.disabled = true;
+                addTrackBtn.style.opacity = '0.5';
+            } else {
+                addTrackBtn.disabled = false;
+                addTrackBtn.style.opacity = '1';
+            }
+        }
+        
+        function createMixtape() {
+            // Get all track URLs
+            const trackInputs = document.querySelectorAll('.track-url');
+            trackUrls = [];
+            
+            // Validate inputs
+            let hasValidUrl = false;
+            
+            trackInputs.forEach(input => {
+                const url = input.value.trim();
+                if (url) {
+                    // Extract YouTube video ID
+                    const videoId = extractYouTubeId(url);
+                    if (videoId) {
+                        trackUrls.push(videoId);
+                        hasValidUrl = true;
+                    }
+                }
+            });
+            
+            if (!hasValidUrl) {
+                alert('Please add at least one valid YouTube URL');
+                return;
+            }
+            
+            // Set mixtape title in player
+            const mixtapeTitle = recipientInput.value.trim() ? 
+                recipientInput.value.toUpperCase() + "'S MIX" : "YOUR MIXTAPE";
+            playerTitle.textContent = mixtapeTitle;
+            
+            // Update track counter
+            trackCounter.textContent = `TRACK 1/${trackUrls.length}`;
+            
+            // Hide creator, show player
+            creator.style.display = 'none';
+            player.style.display = 'block';
+            
+            // Load first track
+            currentTrackIndex = 0;
+            loadTrack(0);
+        }
+        
+        function extractYouTubeId(url) {
+            // Match various YouTube URL formats
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+        
+        function loadTrack(index) {
+            currentTrackIndex = index;
+            trackCounter.textContent = `TRACK ${index + 1}/${trackUrls.length}`;
+            
+            // Clear previous video
+            videoContainer.innerHTML = '';
+            
+            // Create player container
+            const playerDiv = document.createElement('div');
+            playerDiv.id = 'youtube-player';
+            videoContainer.appendChild(playerDiv);
+            
+            // Reset play button and status
+            isPlaying = false;
+            playIcon.textContent = '▶';
+            trackStatus.textContent = 'LOADING...';
+            
+            // Initialize player if YouTube API is ready
+            if (isYouTubeAPIReady && typeof YT !== 'undefined' && YT && YT.Player) {
+                createYouTubePlayer(trackUrls[index]);
+            } else {
+                // Wait for YouTube API to load
+                checkAPIAndCreatePlayer(trackUrls[index]);
+            }
+        }
+        
+        function checkAPIAndCreatePlayer(videoId, attempts = 0) {
+            if (attempts > 20) { // Stop after ~10 seconds (20 attempts * 500ms)
+                console.error("YouTube API failed to load after multiple attempts");
+                trackStatus.textContent = 'ERROR LOADING';
+                return;
+            }
+            
+            if (isYouTubeAPIReady && typeof YT !== 'undefined' && YT && YT.Player) {
+                createYouTubePlayer(videoId);
+            } else {
+                setTimeout(() => checkAPIAndCreatePlayer(videoId, attempts + 1), 500);
+            }
+        }
+        
+        function createYouTubePlayer(videoId) {
+            console.log("Creating player for video:", videoId);
+            if (ytPlayer) {
+                ytPlayer.destroy();
+            }
+            
+            try {
+                ytPlayer = new YT.Player('youtube-player', {
+                    height: '0',
+                    width: '0',
+                    videoId: videoId,
+                    playerVars: {
+                        'autoplay': 0,
+                        'controls': 0,
+                        'rel': 0
+                    },
+                    events: {
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange,
+                        'onError': onPlayerError
+                    }
+                });
+            } catch (error) {
+                console.error("Error creating player:", error);
+                trackStatus.textContent = 'ERROR';
+            }
+        }
+        
+        function onPlayerReady(event) {
+            console.log("Player ready");
+            trackStatus.textContent = 'READY';
+        }
+        
+        function onPlayerStateChange(event) {
+            console.log("Player state changed:", event.data);
+            if (event.data === YT.PlayerState.ENDED) {
+                playNextTrack();
+            } else if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                playIcon.textContent = '⏸';
+                trackStatus.textContent = 'PLAYING';
+                animateWheels(true);
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                isPlaying = false;
+                playIcon.textContent = '▶';
+                trackStatus.textContent = 'PAUSED';
+                animateWheels(false);
+            } else if (event.data === YT.PlayerState.BUFFERING) {
+                trackStatus.textContent = 'BUFFERING...';
+            }
+        }
+        
+        function onPlayerError(event) {
+            console.error("Player error:", event.data);
+            trackStatus.textContent = 'ERROR';
+            // Try to load next track if there is an error
+            if (currentTrackIndex < trackUrls.length - 1) {
+                setTimeout(() => playNextTrack(), 2000);
+            }
+        }
+        
+        function togglePlay() {
+            if (!ytPlayer) return;
+            
+            try {
+                const state = ytPlayer.getPlayerState();
+                
+                if (state === YT.PlayerState.PLAYING) {
+                    ytPlayer.pauseVideo();
+                } else {
+                    ytPlayer.playVideo();
+                }
+            } catch (error) {
+                console.error("Error toggling play:", error);
+            }
+        }
+        
+        function playPreviousTrack() {
+            if (currentTrackIndex > 0) {
+                loadTrack(currentTrackIndex - 1);
+            }
+        }
+        
+        function playNextTrack() {
+            if (currentTrackIndex < trackUrls.length - 1) {
+                loadTrack(currentTrackIndex + 1);
+            } else {
+                // Loop back to first track
+                loadTrack(0);
+            }
+        }
+        
+        function resetToCreator() {
+            // Stop current playback
+            if (ytPlayer) {
+                try {
+                    ytPlayer.stopVideo();
+                    ytPlayer.destroy();
+                    ytPlayer = null;
+                } catch (error) {
+                    console.error("Error stopping player:", error);
+                }
+            }
+            
+            // Reset animation
+            animateWheels(false);
+            
+            // Hide player, show creator
+            player.style.display = 'none';
+            creator.style.display = 'block';
+        }
+        
+        function animateWheels(isPlaying) {
+            if (isPlaying) {
+                leftWheel.classList.add('spinning');
+                rightWheel.classList.add('spinning');
+            } else {
+                leftWheel.classList.remove('spinning');
+                rightWheel.classList.remove('spinning');
+            }
+        }
+        
+        // Example track for testing
+        // Uncomment these lines and add your own YouTube video ID to test
+        /* 
+        document.querySelector('.track-url').value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        */
+    </script>
+</body>
+</html>
