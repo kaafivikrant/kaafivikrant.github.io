@@ -20,8 +20,17 @@
         }
 
         .terminal {
-            max-width: 800px;
+            max-width: 1600px;
             margin: 0 auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: default;
+            resize: both;
+            overflow: hidden;
+            width: 800px;  /* Default landscape size */
+            height: 500px; /* Default landscape size */
         }
 
         .terminal-header {
@@ -31,6 +40,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: move;
         }
 
         .terminal-buttons {
@@ -52,7 +62,30 @@
             background: rgba(0, 0, 0, 0.9);
             padding: 20px;
             border-radius: 0 0 10px 10px;
-            min-height: 60vh;
+            min-height: 70vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 15px;
+            height: 15px;
+            cursor: se-resize;
+            background: transparent;
+        }
+
+        .resize-handle::after {
+            content: '';
+            position: absolute;
+            right: 3px;
+            bottom: 3px;
+            width: 5px;
+            height: 5px;
+            border-right: 2px solid #00ff00;
+            border-bottom: 2px solid #00ff00;
         }
 
         .terminal-output {
@@ -121,6 +154,7 @@
                 <span class="prompt">vikrant@portfolio:~$</span>
                 <input type="text" id="userInput" autofocus>
             </div>
+            <div class="resize-handle"></div>
         </div>
     </div>
 
@@ -197,6 +231,71 @@
         document.querySelector('.terminal-window').addEventListener('click', () => {
             userInput.focus();
         });
+
+        const terminal = document.querySelector('.terminal');
+        const terminalHeader = document.querySelector('.terminal-header');
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        terminalHeader.addEventListener('mousedown', startDragging);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDragging);
+
+        function startDragging(e) {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            if (e.target === terminalHeader) {
+                isDragging = true;
+            }
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                xOffset = currentX;
+                yOffset = currentY;
+                terminal.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+        }
+
+        function stopDragging() {
+            isDragging = false;
+        }
+
+        // Add resize functionality
+        const resizeHandle = document.querySelector('.resize-handle');
+        let isResizing = false;
+
+        resizeHandle.addEventListener('mousedown', initResize);
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', stopResize);
+
+        function initResize(e) {
+            isResizing = true;
+            e.stopPropagation();
+        }
+
+        function resize(e) {
+            if (!isResizing) return;
+            
+            const terminal = document.querySelector('.terminal');
+            const newWidth = e.clientX - terminal.getBoundingClientRect().left;
+            const newHeight = e.clientY - terminal.getBoundingClientRect().top;
+            
+            terminal.style.width = newWidth + 'px';
+            terminal.style.height = newHeight + 'px';
+        }
+
+        function stopResize() {
+            isResizing = false;
+        }
     </script>
 </body>
 </html>
