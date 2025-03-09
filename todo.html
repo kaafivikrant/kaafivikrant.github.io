@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Todo List</title>
+    <title>Enhanced Todo List with Fixed Loader</title>
     <style>
         * {
             margin: 0;
@@ -147,6 +147,16 @@
             font-size: 1rem;
         }
 
+        .task-text-edit {
+            flex: 1;
+            margin-right: 15px;
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            outline: none;
+            font-size: 1rem;
+        }
+
         .timer-bar {
             position: absolute;
             bottom: 0;
@@ -154,7 +164,7 @@
             height: 100%;
             background: rgba(76, 81, 191, 0.15);
             width: 100%;
-            transition: width 1s linear;
+            transition: width linear;
         }
 
         .actions {
@@ -235,21 +245,24 @@
                     const taskId = Date.now() + Math.random();
                     const taskCard = createTaskCard(taskId, taskText, timeInHours);
                     document.getElementById('activeTasks').appendChild(taskCard);
-                    startTimer(taskId, timeInHours);
+                    startTimer(taskId);
                 });
 
                 taskInput.value = '';
+                saveTasks();
             }
         }
 
-        function createTaskCard(id, text, timeInHours) {
+        function createTaskCard(id, text, timeInHours, isPaused = false, startTimestamp = null, pauseTimestamp = null) {
             const card = document.createElement('div');
             card.className = 'task-card';
             card.dataset.id = id;
+            card.dataset.paused = isPaused;
+            card.dataset.startTimestamp = startTimestamp || Date.now();
+            card.dataset.pauseTimestamp = pauseTimestamp || '';
 
             const timerBar = document.createElement('div');
             timerBar.className = 'timer-bar';
-            timerBar.style.transition = `width ${timeInHours * 3600}s linear`;
             
             const content = document.createElement('div');
             content.className = 'task-content';
@@ -260,11 +273,21 @@
 
             const timeDisplay = document.createElement('span');
             timeDisplay.className = 'time-display';
-            timeDisplay.dataset.remaining = timeInHours * 3600; // Store in seconds
+            timeDisplay.dataset.initial = timeInHours * 3600;
             timeDisplay.textContent = formatTime(timeInHours * 3600);
 
             const actions = document.createElement('div');
             actions.className = 'actions';
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'action-btn';
+            editBtn.innerHTML = '✏️';
+            editBtn.onclick = () => enableEdit(id);
+
+            const pauseBtn = document.createElement('button');
+            pauseBtn.className = 'action-btn pause-btn';
+            pauseBtn.innerHTML = isPaused ? '▶️' : '⏸️';
+            pauseBtn.onclick = () => toggleTimer(id);
 
             const completeBtn = document.createElement('button');
             completeBtn.className = 'action-btn';
@@ -276,6 +299,8 @@
             deleteBtn.innerHTML = '✖';
             deleteBtn.onclick = () => deleteTask(id);
 
+            actions.appendChild(editBtn);
+            actions.appendChild(pauseBtn);
             actions.appendChild(completeBtn);
             actions.appendChild(deleteBtn);
             content.appendChild(taskText);
@@ -287,21 +312,32 @@
             return card;
         }
 
-        function startTimer(id, timeInHours) {
+        function startTimer(id) {
             const card = document.querySelector(`.task-card[data-id="${id}"]`);
+            if (!card || card.dataset.paused === 'true') return;
+
             const timerBar = card.querySelector('.timer-bar');
             const timeDisplay = card.querySelector('.time-display');
-            const totalSeconds = timeInHours * 3600;
+            const totalSeconds = parseInt(timeDisplay.dataset.initial);
+            const startTimestamp = parseInt(card.dataset.startTimestamp);
+            const elapsedSeconds = Math.floor((Date.now() - startTimestamp) / 1000);
+            let remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
 
+            timeDisplay.dataset.remaining = remainingSeconds;
+            timeDisplay.textContent = formatTime(remainingSeconds);
+
+            const currentProgress = (remainingSeconds / totalSeconds) * 100;
+            timerBar.style.transition = 'none';
+            timerBar.style.width = `${currentProgress}%`;
             setTimeout(() => {
+                timerBar.style.transition = 'width linear';
+                timerBar.style.transitionDuration = `${remainingSeconds}s`;
                 timerBar.style.width = '0%';
-            }, 100);
-
-            const startTime = Date.now();
-            const endTime = startTime + totalSeconds * 1000;
+            }, 50);
 
             const timer = setInterval(() => {
-                const remainingSeconds = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+                const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+                remainingSeconds = Math.max(0, totalSeconds - elapsed);
                 timeDisplay.textContent = formatTime(remainingSeconds);
                 timeDisplay.dataset.remaining = remainingSeconds;
 
@@ -311,7 +347,61 @@
                 }
             }, 1000);
 
-            card.dataset.timer = timer; // Store timer ID for cleanup
+            card.dataset.timer = timer;
+        }
+
+        function toggleTimer(id) {
+            const card = document.querySelector(`.task-card[data-id="${id}"]`);
+            const timerBar = card.querySelector('.timer-bar');
+            const timeDisplay = card.querySelector('.time-display');
+            const paused = card.dataset.paused === 'true';
+            const totalSeconds = parseInt(timeDisplay.dataset.initial);
+
+            if (!paused) {
+                clearInterval(card.dataset.timer);
+                timerBar.style.transition = 'none';
+                const elapsedSeconds = Math.floor((Date.now() - parseInt(card.dataset.startTimestamp)) / 1000);
+                const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+                const currentProgress = (remainingSeconds / totalSeconds) * 100;
+                timerBar.style.width = `${currentProgress}%`;
+                timeDisplay.dataset.remaining = remainingSeconds;
+                card.dataset.paused = 'true';
+                card.dataset.pauseTimestamp = Date.now();
+                card.querySelector('.pause-btn').innerHTML = '▶️';
+            } else {
+                const pauseTimestamp = parseInt(card.dataset.pauseTimestamp);
+                const timePaused = Math.floor((Date.now() - pauseTimestamp) / 1000);
+                const startTimestamp = parseInt(card.dataset.startTimestamp);
+                card.dataset.startTimestamp = startTimestamp + timePaused * 1000;
+                card.dataset.paused = 'false';
+                card.dataset.pauseTimestamp = '';
+                card.querySelector('.pause-btn').innerHTML = '⏸️';
+                startTimer(id);
+            }
+            saveTasks();
+        }
+
+        function enableEdit(id) {
+            const card = document.querySelector(`.task-card[data-id="${id}"]`);
+            const taskText = card.querySelector('.task-text');
+            const currentText = taskText.textContent;
+            const input = document.createElement('input');
+            input.className = 'task-text-edit';
+            input.value = currentText;
+            input.onblur = () => saveEdit(id, input.value);
+            input.onkeypress = (e) => { if (e.key === 'Enter') saveEdit(id, input.value); };
+            taskText.replaceWith(input);
+            input.focus();
+        }
+
+        function saveEdit(id, newText) {
+            const card = document.querySelector(`.task-card[data-id="${id}"]`);
+            const input = card.querySelector('.task-text-edit');
+            const taskText = document.createElement('span');
+            taskText.className = 'task-text';
+            taskText.textContent = newText || 'Untitled';
+            input.replaceWith(taskText);
+            saveTasks();
         }
 
         function formatTime(seconds) {
@@ -326,8 +416,12 @@
             if (card) {
                 clearInterval(card.dataset.timer);
                 card.querySelector('.timer-bar').style.transition = 'none';
+                card.querySelector('.timer-bar').style.width = '0%';
                 card.querySelector('.time-display').textContent = '0h 0m 0s';
+                card.dataset.paused = 'true';
+                card.dataset.pauseTimestamp = '';
                 document.getElementById('completedTasks').appendChild(card);
+                saveTasks();
             }
         }
 
@@ -338,18 +432,88 @@
                 card.style.opacity = '0';
                 setTimeout(() => {
                     card.remove();
+                    saveTasks();
                 }, 300);
             }
         }
 
-        // window.onload = function() {
-        //     const exampleTasks = `1
-        //     2
-        //     3
-        //     4
-        //     5`;
-        //     document.getElementById('taskInput').value = exampleTasks;
-        // }
+        function saveTasks() {
+            const activeTasks = Array.from(document.querySelectorAll('#activeTasks .task-card'))
+                .map(card => {
+                    const timeDisplay = card.querySelector('.time-display');
+                    const totalSeconds = parseInt(timeDisplay.dataset.initial);
+                    const elapsedSeconds = card.dataset.paused === 'true'
+                        ? Math.floor((parseInt(card.dataset.pauseTimestamp || Date.now()) - parseInt(card.dataset.startTimestamp)) / 1000)
+                        : Math.floor((Date.now() - parseInt(card.dataset.startTimestamp)) / 1000);
+                    const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+                    return {
+                        id: card.dataset.id,
+                        text: card.querySelector('.task-text').textContent,
+                        initial: totalSeconds,
+                        startTimestamp: parseInt(card.dataset.startTimestamp),
+                        paused: card.dataset.paused === 'true',
+                        pauseTimestamp: card.dataset.paused === 'true' ? parseInt(card.dataset.pauseTimestamp || Date.now()) : null
+                    };
+                });
+            const completedTasks = Array.from(document.querySelectorAll('#completedTasks .task-card'))
+                .map(card => ({
+                    id: card.dataset.id,
+                    text: card.querySelector('.task-text').textContent,
+                    initial: parseInt(card.querySelector('.time-display').dataset.initial || 0),
+                    startTimestamp: parseInt(card.dataset.startTimestamp),
+                    paused: true,
+                    pauseTimestamp: null
+                }));
+            localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
+            localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+        }
+
+        function loadTasks() {
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks') || '[]');
+            const completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+
+            activeTasks.forEach(task => {
+                const card = createTaskCard(task.id, task.text, task.initial / 3600, task.paused, task.startTimestamp, task.pauseTimestamp);
+                const timerBar = card.querySelector('.timer-bar');
+                const timeDisplay = card.querySelector('.time-display');
+                const totalSeconds = task.initial;
+                const elapsedSeconds = task.paused
+                    ? Math.floor((task.pauseTimestamp - task.startTimestamp) / 1000)
+                    : Math.floor((Date.now() - task.startTimestamp) / 1000);
+                const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+                timeDisplay.dataset.remaining = remainingSeconds;
+                timeDisplay.textContent = formatTime(remainingSeconds);
+
+                const currentProgress = (remainingSeconds / totalSeconds) * 100;
+                timerBar.style.transition = 'none';
+                timerBar.style.width = `${currentProgress}%`;
+
+                if (!task.paused && remainingSeconds > 0) {
+                    setTimeout(() => {
+                        timerBar.style.transition = 'width linear';
+                        timerBar.style.transitionDuration = `${remainingSeconds}s`;
+                        timerBar.style.width = '0%';
+                        startTimer(task.id);
+                    }, 50);
+                } else if (remainingSeconds <= 0) {
+                    completeTask(task.id);
+                }
+                document.getElementById('activeTasks').appendChild(card);
+            });
+
+            completedTasks.forEach(task => {
+                const card = createTaskCard(task.id, task.text, task.initial / 3600, true, task.startTimestamp);
+                card.querySelector('.time-display').dataset.initial = task.initial;
+                card.querySelector('.timer-bar').style.transition = 'none';
+                card.querySelector('.timer-bar').style.width = '0%';
+                document.getElementById('completedTasks').appendChild(card);
+            });
+        }
+
+        window.onload = function() {
+            loadTasks();
+        }
     </script>
 </body>
 </html>
