@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Todo List with Fixed Loader</title>
+    <title>Enhanced Todo List for Vikrant</title>
     <style>
         * {
             margin: 0;
@@ -96,7 +97,8 @@
             cursor: pointer;
             transition: background 0.2s;
             font-weight: 500;
-            margin-top: 2px; /* Aligns with textarea placeholder */
+            margin-top: 2px;
+            /* Aligns with textarea placeholder */
         }
 
         button:hover {
@@ -206,6 +208,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="input-section">
@@ -263,10 +266,10 @@
 
             const timerBar = document.createElement('div');
             timerBar.className = 'timer-bar';
-            
+
             const content = document.createElement('div');
             content.className = 'task-content';
-            
+
             const taskText = document.createElement('span');
             taskText.className = 'task-text';
             taskText.textContent = text;
@@ -511,9 +514,10 @@
             });
         }
 
-        window.onload = function() {
+        window.onload = function () {
             loadTasks();
         }
     </script>
 </body>
+
 </html>
