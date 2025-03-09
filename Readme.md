@@ -17,6 +17,8 @@ add a support for the mobile view
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 ```
 
+if not completed, then task goes to overdue task
+
 Your todo list is already robust with task editing, pause/resume timers, persistent storage, and a functioning loader bar. Here are some additional features you could add to enhance its functionality, usability, and appeal, tailored to different use cases:
 
 ---
