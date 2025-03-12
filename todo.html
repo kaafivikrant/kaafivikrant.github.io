@@ -4,7 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todo List</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2218%22 font-size=%2224%22>📝</text></svg>">
     <style>
+        :root {
+            --bg-gradient: linear-gradient(145deg, #f7fafc, #edf2f7);
+            --text-color: #2d3748;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(255, 255, 255, 0.5);
+            --input-bg: #ffffff;
+            --input-border: #e2e8f0;
+            --input-text: #4a5568;
+            --completed-bg: rgba(248, 250, 252, 0.95);
+            --completed-text: #718096;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(145deg, #2d3748, #1a202c);
+            --text-color: #f7fafc;
+            --card-bg: rgba(45, 55, 72, 0.95);
+            --card-border: rgba(45, 55, 72, 0.5);
+            --input-bg: #2d3748;
+            --input-border: #4c51bf;
+            --input-text: #f7fafc;
+            --completed-bg: rgba(26, 32, 44, 0.95);
+            --completed-text: #a0aec0;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,30 +38,32 @@
         }
 
         body {
-            background: linear-gradient(145deg, #f7fafc, #edf2f7);
+            background: var(--bg-gradient);
             min-height: 100vh;
             padding: 40px;
-            color: #2d3748;
+            color: var(--text-color);
         }
 
         .container {
             max-width: 720px;
             margin: 0 auto;
+            padding: 0 20px;
         }
 
         .input-section {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--card-bg);
             backdrop-filter: blur(15px);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 40px;
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--card-border);
         }
 
         .input-group {
             display: flex;
-            gap: 12px;
+            flex-direction: column;
+            gap: 8px;
             align-items: center;
         }
 
@@ -46,6 +73,8 @@
             gap: 8px;
             align-items: center;
             white-space: nowrap;
+            width: 100%;
+            justify-content: space-between;
         }
 
         textarea {
@@ -55,14 +84,15 @@
             padding: 10px 16px;
             overflow-y: hidden;
             flex: 1;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
             border-radius: 8px;
-            color: #4a5568;
+            color: var(--input-text);
             outline: none;
             transition: border-color 0.2s;
             resize: vertical;
             line-height: 1.5;
+            width: 100%;
         }
 
         textarea:focus {
@@ -71,12 +101,12 @@
 
         input[type="number"] {
             height: 42px;
-            width: 100px;
+            width: 100%;
             padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            background: #ffffff;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
             border-radius: 8px;
-            color: #4a5568;
+            color: var(--input-text);
             outline: none;
             transition: border-color 0.2s;
         }
@@ -98,6 +128,7 @@
             font-weight: 500;
             margin-top: 2px;
             /* Aligns with textarea placeholder */
+            width: 100%;
         }
 
         button:hover {
@@ -110,20 +141,20 @@
 
         .section h2 {
             margin-bottom: 16px;
-            color: #2d3748;
+            color: var(--text-color);
             font-size: 1.4rem;
             font-weight: 600;
         }
 
         .task-card {
             position: relative;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--card-bg);
             backdrop-filter: blur(15px);
             border-radius: 10px;
             padding: 14px 18px;
             margin-bottom: 10px;
             box-shadow: 0 1px 8px rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--card-border);
             overflow: hidden;
             transition: transform 0.2s;
         }
@@ -143,7 +174,7 @@
         .task-text {
             flex: 1;
             margin-right: 15px;
-            color: #2d3748;
+            color: var(--text-color);
             font-weight: 500;
             font-size: 1rem;
         }
@@ -170,7 +201,8 @@
 
         .actions {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .action-btn {
@@ -181,6 +213,8 @@
             cursor: pointer;
             padding: 4px;
             transition: color 0.2s;
+            width: 100%;
+            text-align: center;
         }
 
         .action-btn:hover {
@@ -189,12 +223,12 @@
 
         .completed .task-card {
             opacity: 0.85;
-            background: rgba(248, 250, 252, 0.95);
+            background: var(--completed-bg);
         }
 
         .completed .task-text {
             text-decoration: line-through;
-            color: #718096;
+            color: var(--completed-text);
         }
 
         .time-display {
@@ -246,9 +280,61 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        @media (min-width: 600px) {
+            .input-group {
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .time-input {
+                width: auto;
+            }
+
+            input[type="number"] {
+                width: 100px;
+            }
+
+            button {
+                width: auto;
+            }
+
+            .actions {
+                flex-direction: row;
+                gap: 10px;
+            }
+
+            .action-btn {
+                width: auto;
+            }
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4c51bf;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: #434190;
+        }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
     <div class="container">
         <div class="input-section">
             <div class="input-group">
@@ -279,6 +365,14 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
+        // Add this at the beginning of the script section
+        function toggleTheme() {
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            document.querySelector('.theme-toggle').innerHTML = theme === 'dark' ? '☀️' : '🌙';
+        }
+
         // Web Audio API for generating chime sounds
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -680,6 +774,9 @@
 
         window.onload = function() {
             loadTasks();
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.querySelector('.theme-toggle').innerHTML = savedTheme === 'dark' ? '☀️' : '🌙';
         }
     </script>
 </body>

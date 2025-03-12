@@ -1,12 +1,5 @@
 Todo
 
-<title>Enhanced Todo List for Vikrant</title>
-change the name of the title to the name of the user
-```html and then store it in the local storage
-```javascript
-localStorage.setItem('title', 'Enhanced Todo List for Vikrant');
-```
-
 Add a favicon to the page
 ```html
 <link rel="icon" href="favicon.ico" type="image/x-icon">
