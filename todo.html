@@ -269,6 +269,11 @@
             <h2>Completed Tasks</h2>
             <div id="completedTasks"></div>
         </div>
+
+        <div class="section overdue">
+            <h2>Overdue Tasks</h2>
+            <div id="overdueTasks"></div>
+        </div>
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
@@ -324,6 +329,7 @@
             card.dataset.notified50 = 'false';
             card.dataset.notified25 = 'false';
             card.dataset.notified10 = 'false';
+            card.dataset.overdue = 'false';
 
             const timerBar = document.createElement('div');
             timerBar.className = 'timer-bar';
@@ -406,7 +412,10 @@
 
                 if (remainingSeconds <= 0) {
                     clearInterval(timer);
-                    completeTask(id);
+                    if (card.dataset.overdue === 'false') {
+                        card.dataset.overdue = 'true';
+                        document.getElementById('overdueTasks').appendChild(card);
+                    }
                 }
             }, 1000);
 
@@ -584,7 +593,8 @@
                         pauseTimestamp: card.dataset.paused === 'true' ? parseInt(card.dataset.pauseTimestamp || Date.now()) : null,
                         notified50: card.dataset.notified50,
                         notified25: card.dataset.notified25,
-                        notified10: card.dataset.notified10
+                        notified10: card.dataset.notified10,
+                        overdue: card.dataset.overdue === 'true'
                     };
                 });
             const completedTasks = Array.from(document.querySelectorAll('#completedTasks .task-card'))
@@ -596,19 +606,32 @@
                     paused: true,
                     pauseTimestamp: null
                 }));
+            const overdueTasks = Array.from(document.querySelectorAll('#overdueTasks .task-card'))
+                .map(card => ({
+                    id: card.dataset.id,
+                    text: card.querySelector('.task-text').textContent,
+                    initial: parseInt(card.querySelector('.time-display').dataset.initial || 0),
+                    startTimestamp: parseInt(card.dataset.startTimestamp),
+                    paused: true,
+                    pauseTimestamp: null,
+                    overdue: true
+                }));
             localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
             localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+            localStorage.setItem('overdueTasks', JSON.stringify(overdueTasks));
         }
 
         function loadTasks() {
             const activeTasks = JSON.parse(localStorage.getItem('activeTasks') || '[]');
             const completedTasks = JSON.parse(localStorage.getItem('completedTasks') || '[]');
+            const overdueTasks = JSON.parse(localStorage.getItem('overdueTasks') || '[]');
 
             activeTasks.forEach(task => {
                 const card = createTaskCard(task.id, task.text, task.initial / 3600, task.paused, task.startTimestamp, task.pauseTimestamp);
                 card.dataset.notified50 = task.notified50 || 'false';
                 card.dataset.notified25 = task.notified25 || 'false';
                 card.dataset.notified10 = task.notified10 || 'false';
+                card.dataset.overdue = task.overdue || 'false';
 
                 const timerBar = card.querySelector('.timer-bar');
                 const timeDisplay = card.querySelector('.time-display');
@@ -644,6 +667,14 @@
                 card.querySelector('.timer-bar').style.transition = 'none';
                 card.querySelector('.timer-bar').style.width = '0%';
                 document.getElementById('completedTasks').appendChild(card);
+            });
+
+            overdueTasks.forEach(task => {
+                const card = createTaskCard(task.id, task.text, task.initial / 3600, true, task.startTimestamp);
+                card.querySelector('.time-display').dataset.initial = task.initial;
+                card.querySelector('.timer-bar').style.transition = 'none';
+                card.querySelector('.timer-bar').style.width = '0%';
+                document.getElementById('overdueTasks').appendChild(card);
             });
         }
 
