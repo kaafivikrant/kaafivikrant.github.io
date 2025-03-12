@@ -334,19 +334,16 @@
             const taskText = document.createElement('span');
             taskText.className = 'task-text';
             taskText.textContent = text;
+            taskText.onclick = () => enableEdit(id, 'text');
 
             const timeDisplay = document.createElement('span');
             timeDisplay.className = 'time-display';
             timeDisplay.dataset.initial = timeInHours * 3600;
             timeDisplay.textContent = formatTime(timeInHours * 3600);
+            timeDisplay.onclick = () => enableEdit(id, 'time');
 
             const actions = document.createElement('div');
             actions.className = 'actions';
-
-            const editBtn = document.createElement('button');
-            editBtn.className = 'action-btn';
-            editBtn.innerHTML = '✏️';
-            editBtn.onclick = () => enableEdit(id);
 
             const pauseBtn = document.createElement('button');
             pauseBtn.className = 'action-btn pause-btn';
@@ -363,7 +360,6 @@
             deleteBtn.innerHTML = '✖';
             deleteBtn.onclick = () => deleteTask(id);
 
-            actions.appendChild(editBtn);
             actions.appendChild(pauseBtn);
             actions.appendChild(completeBtn);
             actions.appendChild(deleteBtn);
@@ -485,26 +481,55 @@
             saveTasks();
         }
 
-        function enableEdit(id) {
+        function enableEdit(id, type) {
             const card = document.querySelector(`.task-card[data-id="${id}"]`);
-            const taskText = card.querySelector('.task-text');
-            const currentText = taskText.textContent;
-            const input = document.createElement('input');
-            input.className = 'task-text-edit';
-            input.value = currentText;
-            input.onblur = () => saveEdit(id, input.value);
-            input.onkeypress = (e) => { if (e.key === 'Enter') saveEdit(id, input.value); };
-            taskText.replaceWith(input);
-            input.focus();
+            if (type === 'text') {
+                const taskText = card.querySelector('.task-text');
+                const currentText = taskText.textContent;
+                const input = document.createElement('input');
+                input.className = 'task-text-edit';
+                input.value = currentText;
+                input.onblur = () => saveEdit(id, input.value, 'text');
+                input.onkeypress = (e) => { if (e.key === 'Enter') saveEdit(id, input.value, 'text'); };
+                taskText.replaceWith(input);
+                input.focus();
+            } else if (type === 'time') {
+                const timeDisplay = card.querySelector('.time-display');
+                const currentTime = parseInt(timeDisplay.dataset.initial) / 3600;
+                const input = document.createElement('input');
+                input.className = 'task-text-edit';
+                input.type = 'number';
+                input.min = '0.1';
+                input.step = '0.1';
+                input.value = currentTime;
+                input.onblur = () => saveEdit(id, input.value, 'time');
+                input.onkeypress = (e) => { if (e.key === 'Enter') saveEdit(id, input.value, 'time'); };
+                timeDisplay.replaceWith(input);
+                input.focus();
+            }
         }
 
-        function saveEdit(id, newText) {
+        function saveEdit(id, newValue, type) {
             const card = document.querySelector(`.task-card[data-id="${id}"]`);
-            const input = card.querySelector('.task-text-edit');
-            const taskText = document.createElement('span');
-            taskText.className = 'task-text';
-            taskText.textContent = newText || 'Untitled';
-            input.replaceWith(taskText);
+            if (type === 'text') {
+                const input = card.querySelector('.task-text-edit');
+                const taskText = document.createElement('span');
+                taskText.className = 'task-text';
+                taskText.textContent = newValue || 'Untitled';
+                taskText.onclick = () => enableEdit(id, 'text');
+                input.replaceWith(taskText);
+            } else if (type === 'time') {
+                const input = card.querySelector('.task-text-edit');
+                const timeDisplay = document.createElement('span');
+                timeDisplay.className = 'time-display';
+                const newTimeInSeconds = parseFloat(newValue) * 3600;
+                timeDisplay.dataset.initial = newTimeInSeconds;
+                timeDisplay.textContent = formatTime(newTimeInSeconds);
+                timeDisplay.onclick = () => enableEdit(id, 'time');
+                input.replaceWith(timeDisplay);
+                card.dataset.startTimestamp = Date.now();
+                startTimer(id);
+            }
             saveTasks();
         }
 
