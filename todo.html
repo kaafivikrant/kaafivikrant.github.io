@@ -331,6 +331,28 @@
         .theme-toggle:hover {
             background: #434190;
         }
+
+        select {
+            height: 42px;
+            padding: 10px 12px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            border-radius: 8px;
+            color: var(--input-text);
+            outline: none;
+            font-size: 1rem;
+            transition: border 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='10' height='5' viewBox='0 0 10 5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 5 5-5z' fill='%234c51bf'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 10px 5px;
+        }
+        select:focus {
+            border-color: #4c51bf;
+        }
     </style>
 </head>
 <body>
@@ -340,7 +362,12 @@
             <div class="input-group">
                 <textarea id="taskInput" placeholder="Enter tasks (one per line or paste a list...)"></textarea>
                 <div class="time-input">
-                    <input type="number" id="timeInput" placeholder="Hours" min="0.1" step="0.1" value="24">
+                    <input type="number" id="timeInput" placeholder="Duration" min="0.1" step="0.1" value="24">
+                    <select id="timeUnit">
+                        <option value="hours" selected>Hours</option>
+                        <option value="minutes">Minutes</option>
+                        <option value="days">Days</option>
+                    </select>
                     <button onclick="addTasks()">Add Tasks</button>
                 </div>
             </div>
@@ -393,27 +420,32 @@
         function addTasks() {
             const taskInput = document.getElementById('taskInput');
             const timeInput = document.getElementById('timeInput');
+            const unit = document.getElementById('timeUnit').value;
+            const timeValue = parseFloat(timeInput.value) || 24;
+            let totalSeconds;
+            switch(unit) {
+                case 'minutes': totalSeconds = timeValue * 60; break;
+                case 'hours': totalSeconds = timeValue * 3600; break;
+                case 'days': totalSeconds = timeValue * 24 * 3600; break;
+            }
             const tasksText = taskInput.value.trim();
-            const timeInHours = parseFloat(timeInput.value) || 24;
-
             if (tasksText) {
                 const tasks = tasksText.split('\n')
                     .map(task => task.replace(/[-•*]\s*/g, '').trim())
                     .filter(task => task.length > 0);
-
                 tasks.forEach(taskText => {
                     const taskId = Date.now() + Math.random();
-                    const taskCard = createTaskCard(taskId, taskText, timeInHours);
+                    // Pass totalSeconds directly to createTaskCard
+                    const taskCard = createTaskCard(taskId, taskText, totalSeconds);
                     document.getElementById('activeTasks').appendChild(taskCard);
                     startTimer(taskId);
                 });
-
                 taskInput.value = '';
                 saveTasks();
             }
         }
 
-        function createTaskCard(id, text, timeInHours, isPaused = false, startTimestamp = null, pauseTimestamp = null) {
+        function createTaskCard(id, text, totalSeconds, isPaused = false, startTimestamp = null, pauseTimestamp = null) {
             const card = document.createElement('div');
             card.className = 'task-card';
             card.dataset.id = id;
@@ -438,8 +470,9 @@
 
             const timeDisplay = document.createElement('span');
             timeDisplay.className = 'time-display';
-            timeDisplay.dataset.initial = timeInHours * 3600;
-            timeDisplay.textContent = formatTime(timeInHours * 3600);
+            // Set the total duration in seconds directly
+            timeDisplay.dataset.initial = totalSeconds;
+            timeDisplay.textContent = formatTime(totalSeconds);
             timeDisplay.onclick = () => enableEdit(id, 'time');
 
             const actions = document.createElement('div');
@@ -598,21 +631,31 @@
                 input.focus();
             } else if (type === 'time') {
                 const timeDisplay = card.querySelector('.time-display');
-                const currentTime = parseInt(timeDisplay.dataset.initial) / 3600;
+                const currentSeconds = parseInt(timeDisplay.dataset.initial);
+                // Default edit value in hours
+                const currentHours = currentSeconds / 3600;
+                const container = document.createElement('div');
+                container.style.display = 'flex';
+                container.style.gap = '5px';
                 const input = document.createElement('input');
                 input.className = 'task-text-edit';
                 input.type = 'number';
                 input.min = '0.1';
                 input.step = '0.1';
-                input.value = currentTime;
-                input.onblur = () => saveEdit(id, input.value, 'time');
-                input.onkeypress = (e) => { if (e.key === 'Enter') saveEdit(id, input.value, 'time'); };
-                timeDisplay.replaceWith(input);
+                input.value = currentHours;
+                const select = document.createElement('select');
+                select.className = 'task-text-edit';
+                select.innerHTML = '<option value="hours" selected>Hours</option><option value="minutes">Minutes</option><option value="days">Days</option>';
+                container.appendChild(input);
+                container.appendChild(select);
+                input.onblur = () => saveEdit(id, input.value, 'time', select.value);
+                input.onkeypress = (e) => { if (e.key === 'Enter') saveEdit(id, input.value, 'time', select.value); };
+                timeDisplay.replaceWith(container);
                 input.focus();
             }
         }
 
-        function saveEdit(id, newValue, type) {
+        function saveEdit(id, newValue, type, unit) {
             const card = document.querySelector(`.task-card[data-id="${id}"]`);
             if (type === 'text') {
                 const input = card.querySelector('.task-text-edit');
@@ -625,11 +668,16 @@
                 const input = card.querySelector('.task-text-edit');
                 const timeDisplay = document.createElement('span');
                 timeDisplay.className = 'time-display';
-                const newTimeInSeconds = parseFloat(newValue) * 3600;
-                timeDisplay.dataset.initial = newTimeInSeconds;
-                timeDisplay.textContent = formatTime(newTimeInSeconds);
+                let newSeconds;
+                switch(unit) {
+                    case 'minutes': newSeconds = parseFloat(newValue) * 60; break;
+                    case 'hours': newSeconds = parseFloat(newValue) * 3600; break;
+                    case 'days': newSeconds = parseFloat(newValue) * 24 * 3600; break;
+                }
+                timeDisplay.dataset.initial = newSeconds;
+                timeDisplay.textContent = formatTime(newSeconds);
                 timeDisplay.onclick = () => enableEdit(id, 'time');
-                input.replaceWith(timeDisplay);
+                input.parentElement.replaceWith(timeDisplay);
                 card.dataset.startTimestamp = Date.now();
                 startTimer(id);
             }
@@ -721,7 +769,8 @@
             const overdueTasks = JSON.parse(localStorage.getItem('overdueTasks') || '[]');
 
             activeTasks.forEach(task => {
-                const card = createTaskCard(task.id, task.text, task.initial / 3600, task.paused, task.startTimestamp, task.pauseTimestamp);
+                // Pass task.initial (seconds) directly
+                const card = createTaskCard(task.id, task.text, task.initial, task.paused, task.startTimestamp, task.pauseTimestamp);
                 card.dataset.notified50 = task.notified50 || 'false';
                 card.dataset.notified25 = task.notified25 || 'false';
                 card.dataset.notified10 = task.notified10 || 'false';
