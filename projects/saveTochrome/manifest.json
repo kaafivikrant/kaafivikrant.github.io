@@ -1,0 +1,38 @@
+{
+    "manifest_version": 3,
+    "name": "Text Saver Extension",
+    "version": "1.0",
+    "description": "Save selected text from any webpage with a right-click or Ctrl+Shift+S.",
+    "permissions": ["contextMenus", "storage", "activeTab", "tabs", "downloads"],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "./Magnifier 16x16 Icon.png",
+        "48": "./Icon 48.png",
+        "128": "./Chrome Extension Icon.png"      
+    }
+    },
+    "icons": {
+      "16": "./Magnifier 16x16 Icon.png",
+        "48": "./Icon 48.png",
+        "128": "./Chrome Extension Icon.png"      
+    },
+    "commands": {
+      "save-note": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+S",
+          "mac": "Command+Shift+S"
+        },
+        "description": "Save selected text to notes"
+      }
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"]
+        }
+    ]
+  }

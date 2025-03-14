@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Saved Notes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      width: 400px;
+      padding: 15px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .note {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      position: relative;
+    }
+    .pinned {
+      background-color: #fff3cd;
+      border: 1px solid #ffecb5;
+    }
+    #confirmation {
+      display: none;
+      margin-bottom: 15px;
+    }
+    .btn-sm {
+      margin-left: 5px;
+    }
+    .dark-mode {
+      background-color: #212529;
+      color: #f8f9fa;
+    }
+    .dark-mode .note {
+      background-color: #343a40;
+      color: #f8f9fa;
+    }
+    .dark-mode .pinned {
+      background-color: #495057;
+      border: 1px solid #6c757d;
+    }
+    .dark-mode .text-muted {
+      color: #adb5bd !important;
+    }
+    .dark-mode .btn-primary {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+    }
+  </style>
+</head>
+<body>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Saved Notes</h2>
+    <button id="dark-mode-toggle" class="btn btn-outline-secondary btn-sm">Toggle Dark Mode</button>
+  </div>
+  <div id="confirmation" class="alert alert-success">Note saved successfully!</div>
+  <div class="mb-3">
+    <input type="text" id="search-input" class="form-control" placeholder="Search notes...">
+    <button id="export-btn" class="btn btn-primary btn-sm mt-2">Export Notes</button>
+  </div>
+  <div id="notes-container"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
