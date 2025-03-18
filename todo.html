@@ -353,6 +353,35 @@
         select:focus {
             border-color: #4c51bf;
         }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            margin-bottom: 0;
+            color: var(--text-color);
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .section-header select {
+            width: auto;
+            height: 32px;
+            padding: 4px 28px 4px 12px;
+            font-size: 0.9rem;
+            background-position: right 8px center;
+            border-color: var(--input-border);
+            background-color: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header select:hover {
+            border-color: #4c51bf;
+        }
     </style>
 </head>
 <body>
@@ -374,7 +403,13 @@
         </div>
 
         <div class="section active-tasks">
-            <h2>Active Tasks</h2>
+            <div class="section-header">
+                <h2>Active Tasks</h2>
+                <select id="sortOption" onchange="sortTasks()">
+                    <option value="recent" selected>Recently Added</option>
+                    <option value="timeLeft">Time Left</option>
+                </select>
+            </div>
             <div id="activeTasks"></div>
         </div>
 
@@ -435,14 +470,62 @@
                     .filter(task => task.length > 0);
                 tasks.forEach(taskText => {
                     const taskId = Date.now() + Math.random();
-                    // Pass totalSeconds directly to createTaskCard
                     const taskCard = createTaskCard(taskId, taskText, totalSeconds);
-                    document.getElementById('activeTasks').appendChild(taskCard);
+                    // Insert new task at the beginning (stack behavior)
+                    const activeContainer = document.getElementById('activeTasks');
+                    activeContainer.insertBefore(taskCard, activeContainer.firstChild);
                     startTimer(taskId);
                 });
                 taskInput.value = '';
                 saveTasks();
             }
+        }
+        
+        // Add a helper to update the timer bar progress after sorting
+        function updateProgress(card) {
+            const timerBar = card.querySelector('.timer-bar');
+            const timeDisplay = card.querySelector('.time-display');
+            const totalSeconds = parseInt(timeDisplay.dataset.initial);
+            const startTimestamp = parseInt(card.dataset.startTimestamp);
+            const elapsedSeconds = Math.floor((Date.now() - startTimestamp) / 1000);
+            let remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+            timeDisplay.dataset.remaining = remainingSeconds;
+            timeDisplay.textContent = formatTime(remainingSeconds);
+            const currentProgress = (remainingSeconds / totalSeconds) * 100;
+            timerBar.style.transition = 'none';
+            timerBar.style.width = `${currentProgress}%`;
+            setTimeout(() => {
+                if (remainingSeconds > 0) {
+                    timerBar.style.transition = 'width linear';
+                    timerBar.style.transitionDuration = `${remainingSeconds}s`;
+                    timerBar.style.width = '0%';
+                }
+            }, 50);
+        }
+
+        // Modify sortTasks to update timer progress after sorting
+        function sortTasks() {
+            const container = document.getElementById('activeTasks');
+            const tasks = Array.from(container.querySelectorAll('.task-card'));
+            const sortOption = document.getElementById('sortOption').value;
+            if (sortOption === 'recent') {
+                tasks.sort((a, b) => parseInt(b.dataset.startTimestamp) - parseInt(a.dataset.startTimestamp));
+            } else if (sortOption === 'timeLeft') {
+                tasks.sort((a, b) => {
+                    const timeAElement = a.querySelector('.time-display');
+                    const timeBElement = b.querySelector('.time-display');
+                    const timeA = timeAElement ? (parseInt(timeAElement.dataset.remaining) || 0) : Infinity;
+                    const timeB = timeBElement ? (parseInt(timeBElement.dataset.remaining) || 0) : Infinity;
+                    return timeA - timeB;
+                });
+            }
+            container.innerHTML = '';
+            tasks.forEach(task => {
+                container.appendChild(task);
+                if (task.dataset.paused === 'false') {
+                    updateProgress(task);
+                }
+            });
         }
 
         function createTaskCard(id, text, totalSeconds, isPaused = false, startTimestamp = null, pauseTimestamp = null) {
