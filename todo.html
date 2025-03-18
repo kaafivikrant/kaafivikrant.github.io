@@ -157,6 +157,9 @@
             border: 1px solid var(--card-border);
             overflow: hidden;
             transition: transform 0.2s;
+            animation: slideDown 0.3s ease-out, scaleIn 0.3s ease-out;
+            transform-origin: top center;
+            will-change: transform, opacity;
         }
 
         .task-card:hover {
@@ -279,6 +282,67 @@
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes deleteAnimation {
+            0% {
+                background: var(--card-bg);
+                transform: translateX(0);
+                opacity: 1;
+            }
+            30% {
+                background: #feb2b2;
+                transform: translateX(10px);
+            }
+            100% {
+                background: #fc8181;
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes completeAnimation {
+            0% {
+                background: var(--card-bg);
+            }
+            50% {
+                background: #9ae6b4;
+                transform: scale(1.02);
+            }
+            100% {
+                background: var(--completed-bg);
+                transform: translateY(0);
+            }
+        }
+
+        .task-card.deleting {
+            animation: deleteAnimation 0.5s ease-in-out forwards;
+        }
+
+        .task-card.completing {
+            animation: completeAnimation 0.6s ease-out forwards;
         }
 
         @media (min-width: 600px) {
@@ -468,12 +532,23 @@
                 const tasks = tasksText.split('\n')
                     .map(task => task.replace(/[-•*]\s*/g, '').trim())
                     .filter(task => task.length > 0);
-                tasks.forEach(taskText => {
+                tasks.forEach((taskText, index) => {
                     const taskId = Date.now() + Math.random();
                     const taskCard = createTaskCard(taskId, taskText, totalSeconds);
-                    // Insert new task at the beginning (stack behavior)
+                    
+                    // Add initial hidden state
+                    taskCard.style.opacity = '0';
+                    taskCard.style.transform = 'translateY(-20px)';
+                    
                     const activeContainer = document.getElementById('activeTasks');
                     activeContainer.insertBefore(taskCard, activeContainer.firstChild);
+                    
+                    // Trigger animation with slight delay for each task
+                    setTimeout(() => {
+                        taskCard.style.opacity = '';
+                        taskCard.style.transform = '';
+                    }, index * 100); // Stagger effect
+                    
                     startTimer(taskId);
                 });
                 taskInput.value = '';
@@ -787,8 +862,16 @@
                 card.querySelector('.time-display').textContent = '0h 0m 0s';
                 card.dataset.paused = 'true';
                 card.dataset.pauseTimestamp = '';
-                document.getElementById('completedTasks').appendChild(card);
-                saveTasks();
+                
+                // Add completing animation
+                card.classList.add('completing');
+                
+                // Wait for animation to finish before moving to completed section
+                setTimeout(() => {
+                    card.classList.remove('completing');
+                    document.getElementById('completedTasks').appendChild(card);
+                    saveTasks();
+                }, 600);
             }
         }
 
@@ -796,11 +879,15 @@
             const card = document.querySelector(`.task-card[data-id="${id}"]`);
             if (card) {
                 clearInterval(card.dataset.timer);
-                card.style.opacity = '0';
+                
+                // Add deleting animation
+                card.classList.add('deleting');
+                
+                // Remove the card after animation completes
                 setTimeout(() => {
                     card.remove();
                     saveTasks();
-                }, 300);
+                }, 500);
             }
         }
 
