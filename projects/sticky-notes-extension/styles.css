@@ -1,0 +1,61 @@
+.sticky-note {
+    position: absolute;
+    width: 180px;
+    height: 120px;
+    background-color: #ffcc99;
+    border-radius: 4px;
+    padding: 8px;
+    z-index: 1000;
+    resize: both;
+    overflow: auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .note-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    margin-bottom: 6px;
+  }
+  
+  .color-picker {
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  
+  .color-picker:hover {
+    opacity: 1;
+  }
+  
+  .delete-btn {
+    font-size: 18px;
+    line-height: 1;
+    color: #666;
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.2s;
+  }
+  
+  .delete-btn:hover {
+    color: #ff4444;
+  }
+  
+  .sticky-note textarea {
+    width: 100%;
+    height: calc(100% - 26px);
+    border: none;
+    background: transparent;
+    resize: none;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #333;
+    outline: none;
+  }

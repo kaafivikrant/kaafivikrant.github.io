@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All DSA Questions</title>
+  <style>
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: linear-gradient(120deg, #f7f7f9 60%, #e3e9f7 100%);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      color: #222;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #2d3a4a;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      padding: 28px 24px 18px 24px;
+      position: relative;
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+      border: 1.5px solid #e3e9f7;
+    }
+    .card:hover {
+      box-shadow: 0 12px 32px rgba(0,0,0,0.13);
+      transform: translateY(-4px) scale(1.02);
+      border-color: #b3c6f7;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1a2540;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .card-meta {
+      font-size: 0.98rem;
+      color: #4a5a7a;
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .card-date {
+      font-size: 0.92rem;
+      color: #7a8ca3;
+      margin-left: auto;
+    }
+    .card-content {
+      margin-top: 12px;
+      font-size: 1rem;
+      color: #2d3a4a;
+      display: none;
+      line-height: 1.6;
+    }
+    .card.open .card-content {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+    .card .close-btn {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: #f2f4fa;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 1.1rem;
+      color: #7a8ca3;
+      cursor: pointer;
+      display: none;
+      transition: background 0.2s;
+    }
+    .card.open .close-btn {
+      display: block;
+    }
+    .card .close-btn:hover {
+      background: #e3e9f7;
+      color: #2d3a4a;
+    }
+    .back-link {
+      display: inline-block;
+      margin: 18px 0 32px 0;
+      color: #4a5a7a;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1.05rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover {
+      color: #007bff;
+      text-decoration: underline;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back to Add Question</a>
+    <h1>All DSA Questions</h1>
+    <div class="card-grid" id="cardGrid"></div>
+  </div>
+  <script>
+    function renderCards() {
+      const grid = document.getElementById('cardGrid');
+      const entries = JSON.parse(localStorage.getItem('dsaEntries')) || [];
+      grid.innerHTML = entries.map((e, idx) => `
+        <div class="card" onclick="toggleCard(event, ${idx})" id="card-${idx}">
+          <div class="card-title">${e.title || 'Untitled'}</div>
+          <div class="card-meta">
+            <span>${e.topic || 'No Category'}</span>
+            <span class="card-date">${e.date || ''}</span>
+          </div>
+          <button class="close-btn" onclick="closeCard(event, ${idx})">×</button>
+          <div class="card-content">
+            <strong>Platform:</strong> ${e.platform || ''}<br/>
+            <strong>Difficulty:</strong> ${e.difficulty || ''}<br/>
+            <strong>Solved:</strong> ${e.solved || ''}<br/>
+            <strong>Pattern:</strong> ${e.pattern || ''}<br/>
+            <strong>Source:</strong> ${e.source || ''}<br/>
+            <strong>Summary:</strong> ${e.summary || ''}<br/>
+            <strong>Intuition:</strong> ${e.intuition || ''}<br/>
+            <strong>Dry Run:</strong> ${e.dryrun || ''}<br/>
+            <strong>Code:</strong> <pre>${e.code || ''}</pre>
+            <strong>Complexity:</strong> ${e.complexity || ''}<br/>
+            <strong>Gotchas:</strong> ${e.gotchas || ''}<br/>
+            <strong>Alternatives:</strong> ${e.alternatives || ''}<br/>
+            <strong>Lessons:</strong> ${e.lesson || ''}<br/>
+            <strong>Fun Tags:</strong> ${e.fun || ''}<br/>
+            <strong>Revision Plan:</strong> ${e.revision || ''}<br/>
+            <strong>Mistakes:</strong> ${e.mistakes || ''}<br/>
+            <strong>Questions:</strong> ${e.questions || ''}<br/>
+            <strong>Diagrams:</strong> ${e.diagrams || ''}<br/>
+            <strong>Real-World Analogy:</strong> ${e.realworld || ''}<br/>
+            <strong>Notes:</strong> ${e.notes || ''}<br/>
+            <small><em>Added on: ${e.timestamp || ''}</em></small>
+          </div>
+        </div>
+      `).join('');
+    }
+    function toggleCard(event, idx) {
+      // Prevent click on close button from toggling
+      if (event.target.classList.contains('close-btn')) return;
+      const card = document.getElementById('card-' + idx);
+      card.classList.toggle('open');
+    }
+    function closeCard(event, idx) {
+      event.stopPropagation();
+      const card = document.getElementById('card-' + idx);
+      card.classList.remove('open');
+    }
+    window.onload = renderCards;
+  </script>
+</body>
+</html>
